@@ -1,0 +1,53 @@
+{
+  "name": "spa",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://litmus-portal.com",
+  "scripts": {
+    "start": "yarn watch:css & react-scripts start",
+    "build": "cross-env NODE_PATH=src yarn build:css && react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "build:css": "postcss src/theme/base.css -o src/index.css",
+    "watch:css": "postcss src/theme/base.css -o src/index.css -w"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.0.0-rc.2",
+    "@apollo/react-components": "^3.1.5",
+    "@apollo/react-hoc": "^3.1.5",
+    "@apollo/react-hooks": "^3.1.5",
+    "@reach/router": "^1.2.1",
+    "apollo-boost": "^0.4.9",
+    "classnames": "^2.2.6",
+    "date-fns": "^1.29.0",
+    "graphql": "^15.1.0",
+    "graphql-tag": "^2.10.3",
+    "humps": "^2.0.1",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "react-scripts": "^3.4.1",
+    "react-toastify": "^6.0.5",
+    "react-vis": "^1.11.4",
+    "redux": "^4.0.1",
+    "redux-react-hook": "^2.0.0",
+    "reselect": "^4.0.0"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "devDependencies": {
+    "autoprefixer": "^9.3.1",
+    "cross-env": "^5.2.0",
+    "globby": "^9.0.0",
+    "node-sass": "^4.9.4",
+    "postcss-cli": "^6.0.1",
+    "redux-devtools": "^3.4.1",
+    "tailwindcss": "^0.6.6"
+  }
+}
