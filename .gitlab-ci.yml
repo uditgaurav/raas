@@ -1,5 +1,6 @@
 # first, install Cypress, then run all tests (in parallel)
 stages:
+  - app-build
   - build
   - test
 
@@ -8,6 +9,8 @@ stages:
 variables:
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
   CYPRESS_CACHE_FOLDER: "$CI_PROJECT_DIR/cache/Cypress"
+  DOCKER_TLS_CERTDIR: ""
+
 
 # cache using branch name
 # https://gitlab.com/help/ci/caching/index.md
@@ -18,69 +21,49 @@ cache:
     - cache/Cypress
     - node_modules
 
-# building an application
-build:
-  script:
-    -  sudo docker build -f frontend/Dockerfile -t uditgaurav/cyprus:v1 .
-    - sudo docker run -d --restart=always -p 3000:80 uditgaurav/cyprus:v1
-    - sudo docker ps
+## application deployment for e2e test
+app-deploy:
+  image: docker:18.09
+  stage: app-build
+  tags:
+    - raas-e2e
+  variables:
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+  services:
+    - docker:18.09-dind
 
+  script:
+    - docker build -f frontend/Dockerfile -t uditgaurav/cyprus:v1 .
+    - docker run -d --restart=always -p 3000:80 uditgaurav/cyprus:v1
+    - docker ps
+    
 # this job installs NPM dependencies and Cypress
 install:
   image: cypress/base:10
   stage: build
-
+  tags:
+    - raas-e2e  
   script:
     - npm ci
     # check Cypress binary path and cached versions
     # useful to make sure we are not carrying around old versions
     - npx cypress cache path
     - npx cypress cache list
-    - $(npm bin)/print-env CI
-    - npm run cy:verify
-    - npm run cy:info
 
-# all jobs that actually run tests can use the same definition
-.job_template:
+cypress-e2e:
   image: cypress/base:10
   stage: test
+  tags:
+    - raas-e2e   
   script:
-    # print CI environment variables for reference
-    - $(npm bin)/print-env CI
-    # start the server in the background
-    - npm run start:ci &
-    # run Cypress test in load balancing mode
-    - npm run e2e:record -- --parallel --group "electrons on GitLab CI"
+    - $(npm bin)/cypress run
   artifacts:
+    expire_in: 1 week
     when: always
     paths:
-      - cypress/videos/**/*.mp4
-      - cypress/screenshots/**/*.png
-    expire_in: 1 day
-
-# actual job definitions
-# all steps are the same, they come from the template above
-electrons-1:
-  extends: .job_template
-  tags:
-    - raas-e2e
-
-electrons-2:
-  extends: .job_template
-  tags:
-    - raas-e2e  
-
-electrons-3:
-  extends: .job_template
-  tags:
-    - raas-e2e
-
-electrons-4:
-  extends: .job_template
-  tags:
-    - raas-e2e
-
-electrons-5:
-  extends: .job_template
-  tags:
-    - raas-e2e  
+    - cypress/screenshots
+    - cypress/videos
+    reports:
+      junit:
+        - results/TEST-*.xml
